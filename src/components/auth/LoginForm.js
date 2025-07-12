@@ -75,7 +75,7 @@ export default function LoginForm({ onToggle }) {
             onClick={onToggle}
             className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
           >
-            Need an account?
+            Create an Account
           </button>
         </div>
       </form>

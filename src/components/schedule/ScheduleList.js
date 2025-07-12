@@ -19,7 +19,6 @@ export default function ScheduleList() {
 
   useEffect(() => {
     if (!user) return;
-
     const ownedSchedulesQuery = query(
       collection(db, "schedules"),
       where("ownerId", "==", user.uid),

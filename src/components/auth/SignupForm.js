@@ -94,7 +94,7 @@ export default function SignupForm({ onToggle }) {
             onClick={onToggle}
             className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
           >
-            Have an account?
+            Login to Existing Account
           </button>
         </div>
       </form>
