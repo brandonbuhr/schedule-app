@@ -14,6 +14,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import AddMember from "@/components/schedule/AddMember";
+import CreateEvent from "@/components/schedule/CreateEvent";
+import EventList from "@/components/schedule/EventList";
 
 export default function SchedulePage({ params }) {
   const resolvedParams = use(params);
@@ -24,6 +26,7 @@ export default function SchedulePage({ params }) {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -107,6 +110,7 @@ export default function SchedulePage({ params }) {
   }
 
   const canManageMembers = userRole === "admin";
+  const canCreateEvents = userRole === "admin" || userRole === "editor";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -140,70 +144,112 @@ export default function SchedulePage({ params }) {
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
-                Members ({members.length})
-              </h2>
-              {canManageMembers && (
-                <button
-                  onClick={() => setShowAddMember(!showAddMember)}
-                  className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                >
-                  {showAddMember ? "Cancel" : "Add Member"}
-                </button>
-              )}
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  Members ({members.length})
+                </h2>
+                {canManageMembers && (
+                  <button
+                    onClick={() => {
+                      setShowAddMember(!showAddMember);
+                      setShowCreateEvent(false);
+                    }}
+                    className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                  >
+                    {showAddMember ? "Cancel" : "Add"}
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                {members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between p-2 rounded hover:bg-gray-50"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {member.displayName}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {member.email}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          member.role === "admin"
+                            ? "bg-purple-100 text-purple-800"
+                            : member.role === "editor"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {member.role}
+                      </span>
+                      {canManageMembers && member.id !== user.uid && (
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="text-red-500 hover:text-red-700 text-xs"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {members.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between p-3 border rounded"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">{member.displayName}</p>
-                    <p className="text-sm text-gray-500">{member.email}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        member.role === "admin"
-                          ? "bg-purple-100 text-purple-800"
-                          : member.role === "editor"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {member.role}
-                    </span>
-                    {canManageMembers && member.id !== user.uid && (
-                      <button
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="text-red-500 hover:text-red-700 text-sm"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {canManageMembers && showAddMember && (
+              <div className="mt-6">
+                <AddMember scheduleId={scheduleId} />
+              </div>
+            )}
           </div>
 
-          {canManageMembers && showAddMember && (
-            <AddMember scheduleId={scheduleId} scheduleName={schedule.title} />
-          )}
-
-          {!showAddMember && (
+          <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Schedule Events</h2>
-              <p className="text-gray-500 text-center py-8">
-                Event functionality coming soon...
-              </p>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Schedule Events</h2>
+                {canCreateEvents && (
+                  <button
+                    onClick={() => {
+                      setShowCreateEvent(!showCreateEvent);
+                      setShowAddMember(false);
+                    }}
+                    className="text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                  >
+                    {showCreateEvent ? "Cancel" : "New Event"}
+                  </button>
+                )}
+              </div>
+
+              {showCreateEvent && canCreateEvents && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-medium mb-4">Create New Event</h3>
+                  <CreateEvent
+                    scheduleId={scheduleId}
+                    onSuccess={() => setShowCreateEvent(false)}
+                  />
+                </div>
+              )}
+
+              <EventList scheduleId={scheduleId} userRole={userRole} />
+
+              {userRole === "viewer" && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800">
+                    You have view-only access to this schedule. Contact an admin
+                    to get edit permissions.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </main>
     </div>
