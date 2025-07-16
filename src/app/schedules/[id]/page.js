@@ -16,6 +16,8 @@ import toast from "react-hot-toast";
 import AddMember from "@/components/schedule/AddMember";
 import CreateEvent from "@/components/schedule/CreateEvent";
 import EventList from "@/components/schedule/EventList";
+import CalendarView from "@/components/schedule/CalenderView";
+import EventDetailModal from "@/components/schedule/EventDetailModal";
 
 export default function SchedulePage({ params }) {
   const resolvedParams = use(params);
@@ -27,6 +29,8 @@ export default function SchedulePage({ params }) {
   const [userRole, setUserRole] = useState(null);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -95,6 +99,11 @@ export default function SchedulePage({ params }) {
         toast.error("Failed to remove member");
       }
     }
+  };
+
+  const handleCalendarDateClick = () => {
+    setShowCreateEvent(true);
+    setShowAddMember(false);
   };
 
   if (loading) {
@@ -214,7 +223,31 @@ export default function SchedulePage({ params }) {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Schedule Events</h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-xl font-semibold">Schedule Events</h2>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`px-3 py-1 rounded ${
+                        viewMode === "list"
+                          ? "bg-white shadow text-gray-900"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      List
+                    </button>
+                    <button
+                      onClick={() => setViewMode("calendar")}
+                      className={`px-3 py-1 rounded ${
+                        viewMode === "calendar"
+                          ? "bg-white shadow text-gray-900"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Calendar
+                    </button>
+                  </div>
+                </div>
                 {canCreateEvents && (
                   <button
                     onClick={() => {
@@ -238,7 +271,15 @@ export default function SchedulePage({ params }) {
                 </div>
               )}
 
-              <EventList scheduleId={scheduleId} userRole={userRole} />
+              {viewMode === "list" ? (
+                <EventList scheduleId={scheduleId} userRole={userRole} />
+              ) : (
+                <CalendarView
+                  scheduleId={scheduleId}
+                  onEventClick={setSelectedEvent}
+                  onDateClick={canCreateEvents ? handleCalendarDateClick : null}
+                />
+              )}
 
               {userRole === "viewer" && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -252,6 +293,13 @@ export default function SchedulePage({ params }) {
           </div>
         </div>
       </main>
+
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 }
